@@ -16,4 +16,4 @@ jobs:
           submodules: recursive
 
       - name: FPGA bitstream for ChipDiscover FPGA dev board
-        uses: chipfoundry/tt-gds-action/fpga/ice40up5k@ttsky25b
+        uses: chipfoundry/tt-gds-action/fpga/ice40up5k
