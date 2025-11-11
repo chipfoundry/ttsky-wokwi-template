@@ -17,3 +17,56 @@ jobs:
 
       - name: FPGA bitstream for TT ASIC Sim (ICE40UP5K)
         uses: TinyTapeout/tt-gds-action/fpga/ice40up5k@ttsky25b
+
+      - name: Checkout tt-support-tools repo
+        uses: actions/checkout@v4
+        with:
+          repository: TinyTapeout/tt-support-tools
+          path: tt
+          ref: tt10
+
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install tt-support-tools dependencies
+        shell: bash
+        run: pip install -r tt/requirements.txt
+
+      - name: Create the UF2
+        shell: bash
+        run: |
+          CLOCKRATE=$(python tt/tt_tool.py info --clock_hz)
+          if [ -z "$CLOCKRATE" ]; then
+            echo "Error: Failed to extract clock rate from info.yaml"
+            exit 1
+          fi
+          TITLE=$(python tt/tt_tool.py info --title)
+          if [ ! -f build/tt_fpga.bin ]; then
+            echo "Error: Bitstream file not found at build/tt_fpga.bin"
+            exit 1
+          fi
+          python tt/fpga/bitstream_to_uf2.py --target efabless --slot 1 --name "$TITLE" --autoclock $CLOCKRATE build/tt_fpga.bin build/tt_fpga.uf2
+
+      - name: Verify UF2 created
+        run: |
+          if [ ! -f build/tt_fpga.uf2 ]; then
+            echo "Error: UF2 file not created"
+            exit 1
+          fi
+          echo "UF2 file created successfully: build/tt_fpga.uf2"
+
+      - name: Upload the bitstream
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fpga_bitstream
+          path: |
+            build/*
+            docs/*
+            src/*
+            info.yaml
+            LICENSE
+          if-no-files-found: warn
