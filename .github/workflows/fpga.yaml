@@ -58,13 +58,14 @@ jobs:
           fi
           echo "UF2 file created successfully: build/tt_fpga.uf2"
 
-      - name: Upload the bitstream
+      - name: Upload UF2 and additional files
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: fpga_bitstream
+          name: fpga_uf2_files
           path: |
-            build/*
+            build/tt_fpga.uf2
+            build/tt_fpga.bin
             docs/*
             src/*
             info.yaml
